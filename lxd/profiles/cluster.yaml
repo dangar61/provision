@@ -205,6 +205,30 @@ devices:
     nictype: bridged
     parent: lxdbr0
     type: nic
+  # lxdint01:
+  #   nictype: bridged
+  #   parent: lxdint01
+  #   type: nic
+  # lxdint02:
+  #  nictype: bridged
+  #  parent: lxdint02
+  #  type: nic
+  lxdiscsi01:
+    nictype: bridged
+    parent: lxdiscsi01
+    type: nic
+  lxdiscsi02:
+    nictype: bridged
+    parent: lxdiscsi02
+    type: nic
+  # lxdpub01:
+  #   nictype: bridged
+  #   parent: lxdpub01
+  #   type: nic
+  # lxdpub02:
+  #   nictype: bridged
+  #   parent: lxdpub02
+  #   type: nic
   iconsdir:
     path: /usr/share/icons
     source: /usr/share/icons
