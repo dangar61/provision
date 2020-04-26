@@ -268,12 +268,15 @@ devices:
     type: disk
   root:
     path: /
-    pool: default
+    pool: zfs
     type: disk
   rootdir:
     path: /root
     source: /root
     type: disk
-name: default
+  config:
+    source: cloud-init:config
+    type: disk
+name: qemu
 used_by: []
 
