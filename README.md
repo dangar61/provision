@@ -1,5 +1,7 @@
 # rafaeldtinoco/provision
 
+tags: remote | install | ubuntu | quick install | live installer | ubuntu provisioning | debian-installer
+
 ## kvm and lxd being provisioned
 
 Feel free to use these scripts and provide feedback and or merge requests.
