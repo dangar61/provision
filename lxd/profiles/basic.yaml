@@ -224,9 +224,9 @@ devices:
     path: /root
     source: /root
     type: disk
-  config:
-    source: cloud-init:config
-    type: disk
+  # config:
+  #   source: cloud-init:config
+  #   type: disk
 name: basic
 used_by: []
 

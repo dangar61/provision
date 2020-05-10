@@ -103,24 +103,13 @@ config:
       - openssh-client
       - software-properties-common
       - build-essential
+      - ubuntu-dev-tools
       - devscripts
       - git-buildpackage
-      - ubuntu-dev-tools
-      - linux-headers-generic
       - gdb
       - strace
       - ltrace
       - lsof
-      - qemu-kvm
-      - qemu-system-x86
-      - qemu-utils
-      - qemu-user-static
-      - libvirt0
-      - libvirt-clients
-      - libvirt-daemon
-      - libvirt-daemon-system
-      - libvirt-nss
-      - virtinst
     power_state:
       delay: 'now'
       mode: reboot
@@ -179,60 +168,22 @@ config:
             %wheel ALL=(ALL) NOPASSWD: ALL
             %sudo ALL=(ALL) NOPASSWD: ALL
             rafaeldtinoco ALL=(ALL) NOPASSWD: ALL
-      - path: /etc/nsswitch.conf
-        content: |
-            passwd:         files systemd
-            group:          files systemd
-            shadow:         files
-            gshadow:        files
-            hosts:          files libvirt_guest libvirt dns
-            networks:       files
-            protocols:      db files
-            services:       db files
-            ethers:         db files
-            rpc:            db files
-            netgroup:       nis
-      - path: /etc/libvirt/qemu.conf
-        content: |
-            user = "root"
-            group = "root"
-            dynamic_ownership = 0
-            clear_emulator_capabilities = 0
-            set_process_name = 1
-            max_core = "unlimited"
-            dump_guest_core = 0
-            seccomp_sandbox = 0
     apt:
       preserve_sources_list: false
       primary:
         - arches: [default]
-          uri: http://us.archive.ubuntu.com/ubuntu
+          uri: http://deb.debian.org/debian/
       sources_list: |
-        deb $MIRROR $RELEASE main restricted universe multiverse
-        deb $MIRROR $RELEASE-updates main restricted universe multiverse
-        deb $MIRROR $RELEASE-proposed main restricted universe multiverse
-        # deb $MIRROR $RELEASE-backports main restricted universe multiverse
-        # deb $SECURITY $RELEASE-security universe multiverse
-        deb-src $MIRROR $RELEASE main restricted universe multiverse
-        deb-src $MIRROR $RELEASE-updates main restricted universe multiverse
-        deb-src $MIRROR $RELEASE-proposed main restricted universe multiverse
-        # deb-src $MIRROR $RELEASE-backports main restricted universe multiverse
-        # deb-src $SECURITY $RELEASE-security universe multiverse
+        deb http://deb.debian.org/debian/ sid main non-free contrib
+        deb-src http://deb.debian.org/debian/ sid main non-free contrib
+        deb http://debug.mirrors.debian.org/debian-debug/ sid-debug main
       conf: |
         Acquire::http::Proxy "http://192.168.100.250:3142/";
         Dpkg::Options {
           "--force-confdef";
           "--force-confold";
         };
-      sources:
-        debug.list:
-          source: |
-            # debug symbols
-            # deb http://ddebs.ubuntu.com $RELEASE main restricted universe multiverse
-            # deb http://ddebs.ubuntu.com $RELEASE-updates main restricted universe multiverse
-            # deb http://ddebs.ubuntu.com $RELEASE-proposed main restricted universe multiverse
-          keyid: C8CAB6595FDFF622
-description: qemu
+description: debian
 devices:
   lxdbr0:
     nictype: bridged
@@ -249,14 +200,6 @@ devices:
   fontsdir:
     path: /usr/share/fonts
     source: /usr/share/fonts
-    type: disk
-  libvirt_pool:
-    path: /var/lib/libvirt/images
-    source: /var/lib/libvirt/images
-    type: disk
-  libvirt_etc:
-    path: /etc/libvirt/qemu
-    source: /etc/libvirt/qemu
     type: disk
   optdir:
     path: /opt
@@ -277,6 +220,6 @@ devices:
   # config:
   #   source: cloud-init:config
   #   type: disk
-name: qemu
+name: debian
 used_by: []
 

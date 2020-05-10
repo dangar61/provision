@@ -41,6 +41,9 @@ config:
       - DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -y
       - DEBIAN_FRONTEND=noninteractive apt-get autoremove -y
       - DEBIAN_FRONTEND=noninteractive apt-get autoclean -y
+      - DEBIAN_FRONTEND=noninteractive apt-get install -y openjdk-11-jdk || true
+      - DEBIAN_FRONTEND=noninteractive apt-get install -y openjdk-13-jdk || true
+      - DEBIAN_FRONTEND=noninteractive apt-get install -y openjdk-14-jdk || true
       - systemctl disable systemd-remount-fs
       - systemctl disable unattended-upgrades
       - systemctl disable apt-daily-upgrade.timer
@@ -111,6 +114,14 @@ config:
       - strace
       - ltrace
       - lsof
+      - xterm
+      - vim-gtk
+      - vim-nox
+      - gtk2-engines
+      - gtk2-engines-murrine
+      - gtk2-engines-pixbuf
+      - gtk3-engines-breeze
+      - gtk3-engines-unico
     power_state:
       delay: 'now'
       mode: reboot
@@ -233,9 +244,9 @@ devices:
     path: /root
     source: /root
     type: disk
-  config:
-    source: cloud-init:config
-    type: disk
+  # config:
+  #   source: cloud-init:config
+  #   type: disk
 name: default
 used_by: []
 
