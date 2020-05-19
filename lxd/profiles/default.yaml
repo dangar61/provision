@@ -32,7 +32,7 @@ config:
       - snap install --classic --edge git-ubuntu
       - systemctl stop unattended-upgrades
       - systemctl stop systemd-remount-fs
-      - system reset-failed
+      - systemctl reset-failed
       - passwd -d root
       - passwd -d rafaeldtinoco
       - echo "debconf debconf/priority select low" | sudo debconf-set-selections
@@ -69,7 +69,7 @@ config:
       - systemctl disable lvm2-lvmetad.socket
       - rm -rf /root/.bashrc /root/.gnupg /root/.profile /root/.ssh/
       - cp -rfp /home/rafaeldtinoco/.ssh /root/.ssh
-      - chown -r root:root /root/.ssh
+      - chown -R root:root /root/.ssh
       - ln -s /home/rafaeldtinoco/.bashrc /root/.bashrc
       - ln -s /home/rafaeldtinoco/.vimrc /root/.vimrc
       - ln -s /home/rafaeldtinoco/.viminfo /root/.viminfo
@@ -244,9 +244,6 @@ devices:
     path: /root
     source: /root
     type: disk
-  # config:
-  #   source: cloud-init:config
-  #   type: disk
 name: default
 used_by: []
 
