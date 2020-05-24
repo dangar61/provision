@@ -1,3 +1,9 @@
+
+# note: I started using all networks from lxd daemon,
+# also available from this repository, this explains
+# why the previous networks, defined by libvirt, are
+# in the "old" directory
+
 # creating networks
 
 $ virsh net-define ./iscsi01.xml
