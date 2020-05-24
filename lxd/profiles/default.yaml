@@ -30,6 +30,7 @@ config:
     https_proxy: http://192.168.100.250:3142/
     runcmd:
       - snap install --classic --edge git-ubuntu
+      - snap install --classic --edge ustriage
       - systemctl stop unattended-upgrades
       - systemctl stop systemd-remount-fs
       - systemctl reset-failed
@@ -228,6 +229,10 @@ devices:
     path: /usr/share/fonts
     source: /usr/share/fonts
     type: disk
+  etcfonts:
+    path: /etc/fonts/
+    source: /etc/fonts/
+    type: disk
   optdir:
     path: /opt
     source: /opt
@@ -238,7 +243,7 @@ devices:
     type: disk
   root:
     path: /
-    pool: zfs
+    pool: default
     type: disk
   rootdir:
     path: /root

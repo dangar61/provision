@@ -201,6 +201,10 @@ devices:
     path: /usr/share/fonts
     source: /usr/share/fonts
     type: disk
+  etcfonts:
+    path: /etc/fonts/
+    source: /etc/fonts/
+    type: disk
   optdir:
     path: /opt
     source: /opt
