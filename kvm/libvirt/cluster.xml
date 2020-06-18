@@ -49,11 +49,33 @@
       <source file='$qcow2vol'/>
       <target dev='vda' bus='virtio'/>
     </disk>
-    <!-- watchdog device -->
-    <watchdog model='i6300esb' action='inject-nmi'/>
-    <!-- default network -->
+    <!-- all networks -->
     <interface type='network'>
       <source network='default'/>
+      <model type='virtio'/>
+    </interface>
+    <interface type='bridge'>
+      <source bridge='iscsi01'/>
+      <model type='virtio'/>
+    </interface>
+    <interface type='bridge'>
+      <source bridge='iscsi02'/>
+      <model type='virtio'/>
+    </interface>
+    <interface type='bridge'>
+      <source bridge='private01'/>
+      <model type='virtio'/>
+    </interface>
+    <interface type='bridge'>
+      <source bridge='private02'/>
+      <model type='virtio'/>
+    </interface>
+    <interface type='bridge'>
+      <source bridge='public01'/>
+      <model type='virtio'/>
+    </interface>
+    <interface type='bridge'>
+      <source bridge='public02'/>
       <model type='virtio'/>
     </interface>
     <!-- serial -->
