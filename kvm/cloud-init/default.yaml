@@ -9,7 +9,7 @@ users:
     shell: /bin/bash
 disable_root: false
 network:
-  version: 1
+  version: 2
   config:
   - type: physical
     name: eth0
@@ -28,44 +28,62 @@ runcmd:
   - passwd -d CHANGE_USERNAME
   - echo "debconf debconf/priority select low" | sudo debconf-set-selections
   - DEBIAN_FRONTEND=noninteractive dpkg-reconfigure debconf
-  - DEBIAN_FRONTEND=noninteractive apt-get update -y
-  - DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -y
-  - DEBIAN_FRONTEND=noninteractive apt-get autoremove -y
-  - DEBIAN_FRONTEND=noninteractive apt-get autoclean -y
+  - DEBIAN_FRONTEND=noninteractive apt-get update -y || true
+  - DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -y || true
+  - DEBIAN_FRONTEND=noninteractive apt-get autoremove -y || true
+  - DEBIAN_FRONTEND=noninteractive apt-get autoclean -y || true
+  - DEBIAN_FRONTEND=noninteractive apt-get install -y openjdk-8-jdk || true
   - systemctl disable systemd-remount-fs
-  - systemctl disable unattended-upgrades
-  - systemctl disable apt-daily-upgrade.timer
-  - systemctl disable apt-daily.timer
-  - systemctl disable accounts-daemon.service
-  - systemctl disable motd-news.timer
-  - systemctl disable irqbalance.service
-  - systemctl disable rsync.service
-  - systemctl disable ebtables.service
-  - systemctl disable pollinate.service
-  - systemctl disable ufw.service
-  - systemctl disable apparmor.service
-  - systemctl disable apport-autoreport.path
-  - systemctl disable apport-forward.socket
-  - systemctl disable iscsi.service
-  - systemctl disable open-iscsi.service
-  - systemctl disable iscsid.socket
-  - systemctl disable multipathd.socket
-  - systemctl disable multipath-tools.service
-  - systemctl disable multipathd.service
-  - systemctl disable lvm2-monitor.service
-  - systemctl disable lvm2-lvmpolld.socket
-  - systemctl disable lvm2-lvmetad.socket
+  - systemctl disable --now unattended-upgrades
+  - systemctl disable --now apt-daily-upgrade.timer
+  - systemctl disable --now apt-daily.timer
+  - systemctl disable --now accounts-daemon.service
+  - systemctl disable --now motd-news.timer
+  - systemctl disable --now irqbalance.service
+  - systemctl disable --now rsync.service
+  - systemctl disable --now ebtables.service
+  - systemctl disable --now pollinate.service
+  - systemctl disable --now ufw.service
+  - systemctl disable --now apparmor.service
+  - systemctl disable --now apport-autoreport.path
+  - systemctl disable --now apport-forward.socket
+  - systemctl disable --now iscsi.service
+  - systemctl disable --now open-iscsi.service
+  - systemctl disable --now iscsid.socket
+  - systemctl disable --now multipathd.socket
+  - systemctl disable --now multipath-tools.service
+  - systemctl disable --now multipathd.service
+  - systemctl disable --now lvm2-monitor.service
+  - systemctl disable --now lvm2-lvmpolld.socket
+  - systemctl disable --now lvm2-lvmetad.socket
+  - systemctl disable --now fstrim.timer
+  - systemctl disable --now e2scrub_all.timer
+  - systemctl disable --now e2scrub_reap.service
+  - systemctl disable --now dbus-org.freedesktop.thermald.service
+  - systemctl enable --now serial-getty@hvc0.service
+  - systemctl enable --now serial-getty@hvc1.service
+  - systemctl enable --now serial-getty@hvc2.service
+  - systemctl enable --now serial-getty@hvc3.service
+  - systemctl enable --now serial-getty@hvc4.service
+  - systemctl enable --now serial-getty@hvc5.service
+  - DEBIAN_FRONTEND=noninteractive apt-get install -y haveged || true
   - rm -rf /root/.bashrc /root/.gnupg /root/.profile /root/.ssh/
-  - cp -rfp /home/rafaeldtinoco/.ssh /root/.ssh
-  - chown -r root:root /root/.ssh
-  - ln -s /home/rafaeldtinoco/.bashrc /root/.bashrc
-  - ln -s /home/rafaeldtinoco/.vimrc /root/.vimrc
-  - ln -s /home/rafaeldtinoco/.viminfo /root/.viminfo
-  - ln -s /home/rafaeldtinoco/.vim /root/.vim
-  - ln -s /home/rafaeldtinoco/.alias /root/.alias
-  - ln -s /home/rafaeldtinoco/.bash_profile /root/.bash_profile
-  - ln -s /home/rafaeldtinoco/.profile /root/.profile
-  - ln -s /home/rafaeldtinoco/.gnupg /root/.gnupg 
+  - cp -rfp /home/CHANGE_USERNAME/.ssh /root/.ssh
+  - chown -R root:root /root/.ssh
+  - ln -s /home/CHANGE_USERNAME/.bashrc /root/.bashrc
+  - ln -s /home/CHANGE_USERNAME/.vimrc /root/.vimrc
+  - ln -s /home/CHANGE_USERNAME/.viminfo /root/.viminfo
+  - ln -s /home/CHANGE_USERNAME/.vim /root/.vim
+  - ln -s /home/CHANGE_USERNAME/.alias /root/.alias
+  - ln -s /home/CHANGE_USERNAME/.bash_profile /root/.bash_profile
+  - ln -s /home/CHANGE_USERNAME/.profile /root/.profile
+  - ln -s /home/CHANGE_USERNAME/.gnupg /root/.gnupg
+  - mkdir -p /etc/systemd/system/serial-getty@hvc0.service.d
+  - mkdir -p /etc/systemd/system/serial-getty@hvc1.service.d
+  - mkdir -p /etc/systemd/system/serial-getty@hvc2.service.d
+  - mkdir -p /etc/systemd/system/serial-getty@hvc3.service.d
+  - mkdir -p /etc/systemd/system/serial-getty@hvc4.service.d
+  - mkdir -p /etc/systemd/system/serial-getty@hvc5.service.d
 packages:
   - man
   - manpages
@@ -102,6 +120,20 @@ packages:
   - strace
   - ltrace
   - lsof
+  - xterm
+  - vim-gtk
+  - vim-nox
+  - gtk2-engines
+  - gtk2-engines-murrine
+  - gtk2-engines-pixbuf
+  - gtk3-engines-breeze
+  - gtk3-engines-unico
+  - dmz-cursor-theme
+  - gnome-icon-theme
+  - gnome-themes-standard
+  - gnome-themes-ubuntu
+  - gtk-3-examples
+  - keychain
 power_state:
   delay: 'now'
   mode: reboot
@@ -153,6 +185,8 @@ write_files:
         Defaults env_keep += "LANG LANGUAGE LINGUAS LC_* _XKB_CHARSET"
         Defaults env_keep += "HOME EDITOR SYSTEMD_EDITOR PAGER"
         Defaults env_keep += "XMODIFIERS GTK_IM_MODULE QT_IM_MODULE QT_IM_SWITCHER"
+        Defaults env_keep += "HTTP_PROXY HTTPS_PROXY FTP_PROXY"
+        Defaults env_keep += "http_proxy https_proxy ftp_proxy"
         Defaults secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
         Defaults logfile=/var/log/sudo.log,loglinelen=0
         Defaults !syslog, !pam_session
@@ -163,10 +197,11 @@ write_files:
   - path: /etc/default/grub
     content: |
         GRUB_DEFAULT=0
-        GRUB_HIDDEN_TIMEOUT_QUIET=true
-        GRUB_TIMEOUT=0
+        GRUB_HIDDEN_TIMEOUT_QUIET=false
+        GRUB_TIMEOUT=2
         GRUB_DISTRIBUTOR=""
-        GRUB_CMDLINE_LINUX_DEFAULT="root=/dev/vda2 console=tty0 console=ttyS0,38400n8 apparmor=0 net.ifnames=0 elevator=noop pti=off kpti=off nopcid noibrs noibpb spectre_v2=off nospec_store_bypass_disable l1tf=off"
+        # ttyS0 only for GRUB (virtio-serial won't cause vm exits)
+        GRUB_CMDLINE_LINUX_DEFAULT="root=/dev/vda2 console=hvc0 console=tty0 apparmor=0 net.ifnames=0 elevator=noop pti=off kpti=off nopcid noibrs noibpb spectre_v2=off nospec_store_bypass_disable l1tf=off nomodeset"
         GRUB_CMDLINE_LINUX=""
         GRUB_TERMINAL=serial
         GRUB_SERIAL_COMMAND="serial --speed=115200 --unit=0 --word=8 --parity=no --stop=1"
@@ -182,9 +217,6 @@ write_files:
       virtio_ring
       virtio
       ext4
-      9p
-      9pnet
-      9pnet_virtio
   - path: /etc/initramfs-tools/modules
     content: |
       virtio_balloon
@@ -194,9 +226,97 @@ write_files:
       virtio_ring
       virtio
       ext4
-      9p
-      9pnet
-      9pnet_virtio
+  - path: /etc/systemd/system/serial-getty@hvc0.service.d/override.conf
+    content: |
+        [Service]
+        User=CHANGE_USERNAME
+        Environment=HOME=/home/CHANGE_USERNAME
+        WorkingDirectory=/home/CHANGE_USERNAME
+        ExecStart=
+        ExecStart=-/bin/bash
+        StandardInput=tty
+        StandardOutput=tty
+        Restart=always
+        [Install]
+        WantedBy=getty.target
+  - path: /etc/systemd/system/serial-getty@hvc1.service.d/override.conf
+    content: |
+        [Service]
+        User=CHANGE_USERNAME
+        Environment=HOME=/home/CHANGE_USERNAME
+        WorkingDirectory=/home/CHANGE_USERNAME
+        ExecStart=
+        ExecStart=-/bin/bash
+        StandardInput=tty
+        StandardOutput=tty
+        Restart=always
+        [Install]
+        WantedBy=getty.target
+  - path: /etc/systemd/system/serial-getty@hvc2.service.d/override.conf
+    content: |
+        [Service]
+        User=CHANGE_USERNAME
+        Environment=HOME=/home/CHANGE_USERNAME
+        WorkingDirectory=/home/CHANGE_USERNAME
+        ExecStart=
+        ExecStart=-/bin/bash
+        StandardInput=tty
+        StandardOutput=tty
+        Restart=always
+        [Install]
+        WantedBy=getty.target
+  - path: /etc/systemd/system/serial-getty@hvc3.service.d/override.conf
+    content: |
+        [Service]
+        User=CHANGE_USERNAME
+        Environment=HOME=/home/CHANGE_USERNAME
+        WorkingDirectory=/home/CHANGE_USERNAME
+        ExecStart=
+        ExecStart=-/bin/bash
+        StandardInput=tty
+        StandardOutput=tty
+        Restart=always
+        [Install]
+        WantedBy=getty.target
+  - path: /etc/systemd/system/serial-getty@hvc4.service.d/override.conf
+    content: |
+        [Service]
+        User=CHANGE_USERNAME
+        Environment=HOME=/home/CHANGE_USERNAME
+        WorkingDirectory=/home/CHANGE_USERNAME
+        ExecStart=
+        ExecStart=-/bin/bash
+        StandardInput=tty
+        StandardOutput=tty
+        Restart=always
+        [Install]
+        WantedBy=getty.target
+  - path: /etc/systemd/system/serial-getty@hvc5.service.d/override.conf
+    content: |
+        [Service]
+        User=CHANGE_USERNAME
+        Environment=HOME=/home/CHANGE_USERNAME
+        WorkingDirectory=/home/CHANGE_USERNAME
+        ExecStart=
+        ExecStart=-/bin/bash
+        StandardInput=tty
+        StandardOutput=tty
+        Restart=always
+        [Install]
+        WantedBy=getty.target
+  - path: /etc/systemd/system/serial-getty@hvc6.service.d/override.conf
+    content: |
+        [Service]
+        User=CHANGE_USERNAME
+        Environment=HOME=/home/CHANGE_USERNAME
+        WorkingDirectory=/home/CHANGE_USERNAME
+        ExecStart=
+        ExecStart=-/bin/bash
+        StandardInput=tty
+        StandardOutput=tty
+        Restart=always
+        [Install]
+        WantedBy=getty.target
 apt:
   preserve_sources_list: false
   primary:
@@ -218,7 +338,7 @@ apt:
   sources:
     debug.list:
       source: |
-        # deb http://ddebs.ubuntu.com $RELEASE main restricted universe multiverse
-        # deb http://ddebs.ubuntu.com $RELEASE-updates main restricted universe multiverse
-        # deb http://ddebs.ubuntu.com $RELEASE-proposed main restricted universe multiverse
+        deb http://ddebs.ubuntu.com $RELEASE main restricted universe multiverse
+        deb http://ddebs.ubuntu.com $RELEASE-updates main restricted universe multiverse
+        deb http://ddebs.ubuntu.com $RELEASE-proposed main restricted universe multiverse
       keyid: C8CAB6595FDFF622
