@@ -83,7 +83,7 @@ getoptkvm() {
       printf "\t-u <username>\t\t- as 1000:1000 in the installed vm (default: ubuntu)\n"
       printf "\t-l <launchpad_id>\t- for the ssh key import (default: rafaeldtinoco)\n"
       printf "\t-p <proxy>\t\t- proxy for http/https/ftp\n"
-      printf "\t-r <repo.url>\t\t- url for the ubuntu mirror (default: us.archive)\n"
+      printf "\t-r <repo.url>\t\t- url for the ubuntu mirror (default: br.archive)\n"
       printf "\t-o <isofile>\t\t- file containing iso image to be used as cdrom\n"
       printf "\t-k\t\t\t- do not attempt to install anything (livecd cases)\n"
       printf "\t-q\t\t\t- do not attempt to create qcow2 volumes (livecd cases)\n"

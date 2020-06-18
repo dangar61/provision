@@ -34,7 +34,7 @@ syntax: /home/rafaeldtinoco/devel/provision/kvm/kvm.sh [options]
 |-u <username>|as 1000:1000 in the installed vm (default: ubuntu)|
 |-l <launchpad_id>|for the ssh key import (default: rafaeldtinoco)|
 |-p <proxy>|proxy for http/https/ftp|
-|-r <repo.url>|url for the ubuntu mirror (default: us.archive)|
+|-r <repo.url>|url for the ubuntu mirror (default: br.archive)|
 |-w|wait until cloud-init is finished (after 1st boot)|
 
 As an example you could install a kvm guest called "example":
@@ -43,7 +43,7 @@ As an example you could install a kvm guest called "example":
 $ ~/devel/provision/kvm/kvm.sh -w -c 8 -m 4 -n example -t default -i vanilla \
     -d bionic -u rafaeldtinoco -l rafaeldtinoco \
     -p http://192.168.100.252:3128/ \
-    -r http://us.archive.ubuntu.com/ubuntu
+    -r http://br.archive.ubuntu.com/ubuntu
 
 info: logs at /tmp/kvm.log
 option: vcpus=8
@@ -55,7 +55,7 @@ option: distro=bionic
 option: username=rafaeldtinoco
 option: launchpad_id=rafaeldtinoco
 option: proxy=http://192.168.100.252:3128/
-option: repository=http://us.archive.ubuntu.com/ubuntu
+option: repository=http://br.archive.ubuntu.com/ubuntu
 option: wait vm
 ...
 mark: qcow2 image
