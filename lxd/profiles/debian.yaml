@@ -29,10 +29,6 @@ config:
     ftp_proxy: http://192.168.100.250:3142/
     https_proxy: http://192.168.100.250:3142/
     runcmd:
-      - snap install --classic --edge git-ubuntu
-      - systemctl stop unattended-upgrades
-      - systemctl stop systemd-remount-fs
-      - systemctl reset-failed
       - passwd -d root
       - passwd -d rafaeldtinoco
       - echo "debconf debconf/priority select low" | sudo debconf-set-selections
@@ -41,40 +37,7 @@ config:
       - DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -y
       - DEBIAN_FRONTEND=noninteractive apt-get autoremove -y
       - DEBIAN_FRONTEND=noninteractive apt-get autoclean -y
-      - systemctl disable systemd-remount-fs
-      - systemctl disable unattended-upgrades
-      - systemctl disable apt-daily-upgrade.timer
-      - systemctl disable apt-daily.timer
-      - systemctl disable accounts-daemon.service
-      - systemctl disable motd-news.timer
-      - systemctl disable irqbalance.service
-      - systemctl disable rsync.service
-      - systemctl disable ebtables.service
-      - systemctl disable pollinate.service
-      - systemctl disable ufw.service
-      - systemctl disable apparmor.service
-      - systemctl disable apport-autoreport.path
-      - systemctl disable apport-forward.socket
-      - systemctl disable iscsi.service
-      - systemctl disable open-iscsi.service
-      - systemctl disable iscsid.socket
-      - systemctl disable multipathd.socket
-      - systemctl disable multipath-tools.service
-      - systemctl disable multipathd.service
-      - systemctl disable lvm2-monitor.service
-      - systemctl disable lvm2-lvmpolld.socket
-      - systemctl disable lvm2-lvmetad.socket
-      - rm -rf /root/.bashrc /root/.gnupg /root/.profile /root/.ssh/
-      - cp -rfp /home/rafaeldtinoco/.ssh /root/.ssh
-      - chown -R root:root /root/.ssh
-      - ln -s /home/rafaeldtinoco/.bashrc /root/.bashrc
-      - ln -s /home/rafaeldtinoco/.vimrc /root/.vimrc
-      - ln -s /home/rafaeldtinoco/.viminfo /root/.viminfo
-      - ln -s /home/rafaeldtinoco/.vim /root/.vim
-      - ln -s /home/rafaeldtinoco/.alias /root/.alias
-      - ln -s /home/rafaeldtinoco/.bash_profile /root/.bash_profile
-      - ln -s /home/rafaeldtinoco/.profile /root/.profile
-      - ln -s /home/rafaeldtinoco/.gnupg /root/.gnupg
+      - DEBIAN_FRONTEND=noninteractive apt-get install -y haveged || true
     packages:
       - man
       - manpages
@@ -103,7 +66,6 @@ config:
       - openssh-client
       - software-properties-common
       - build-essential
-      - ubuntu-dev-tools
       - devscripts
       - git-buildpackage
       - gdb
@@ -161,6 +123,8 @@ config:
             Defaults env_keep += "LANG LANGUAGE LINGUAS LC_* _XKB_CHARSET"
             Defaults env_keep += "HOME EDITOR SYSTEMD_EDITOR PAGER"
             Defaults env_keep += "XMODIFIERS GTK_IM_MODULE QT_IM_MODULE QT_IM_SWITCHER"
+            Defaults env_keep += "HTTP_PROXY HTTPS_PROXY FTP_PROXY"
+            Defaults env_keep += "http_proxy https_proxy ftp_proxy"
             Defaults secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
             Defaults logfile=/var/log/sudo.log,loglinelen=0
             Defaults !syslog, !pam_session
@@ -179,10 +143,6 @@ config:
         deb http://debug.mirrors.debian.org/debian-debug/ sid-debug main
       conf: |
         Acquire::http::Proxy "http://192.168.100.250:3142/";
-        Dpkg::Options {
-          "--force-confdef";
-          "--force-confold";
-        };
 description: debian
 devices:
   lxdbr0:
@@ -215,7 +175,7 @@ devices:
     type: disk
   root:
     path: /
-    pool: zfs
+    pool: default
     type: disk
   rootdir:
     path: /root
