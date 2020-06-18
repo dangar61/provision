@@ -57,14 +57,18 @@ usage $@
 [ "$distro" == "" ] && distro=$(ubuntu-distro-info --stable)
 [ "$launchpad_id" == "" ] && launchpad_id="rafaeldtinoco"
 [ "$username" == "" ] && username="ubuntu"
-[ "$repository" == "" ] && repository="http://us.archive.ubuntu.com/ubuntu"
-[ "$cdromvol" != "" ] && [ ! -f "$cdromvol" ] && exiterr "cdrom image does not exist"
+[ "$repository" == "" ] && repository="http://br.archive.ubuntu.com/ubuntu"
+
+[ "$proxy" != "" ] && export HTTP_PROXY="$proxy" ; export http_proxy=$proxy
+[ "$proxy" != "" ] && export HTTPS_PROXY="$proxy" ; export https_proxy=$proxy
+[ "$proxy" != "" ] && export FTP_PROXY="$proxy" ; export ftp_proxy=$proxy
+
 
 distro_devel=0
-if [ "$distro" == "focal" ];
+if [ "$distro" == "groovy" ];
 then
   distro_devel=1
-  distro="eoan"
+  distro="focal"
 fi
 
 # environmetal
@@ -217,7 +221,7 @@ do_debootstrap() {
 
   # start debootstrap
 
-  echo "mark: debootstraping"
+  echo "mark: debootstraping (proxy: $http_proxy)"
 
   checkcond debootstrap \
     --components=main,restricted,universe,multiverse \
@@ -247,10 +251,9 @@ do_debootstrap() {
 
   echo """LABEL=MYROOT / ext4 noatime,nodiratime,relatime,discard,errors=remount-ro 0 1
 
-# p9filesystem (check kvm/libvirt/extras/p9filesystem/p9-{root,home}.xml
+10.250.99.1:/home /home nfs vers=3,rw,sync,rdirplus,proto=udp,nolock,hard,noac,rsize=65536,wsize=65536,timeo=30 0 0
+10.250.99.1:/root /root nfs vers=3,rw,sync,rdirplus,proto=udp,nolock,hard,noac,rsize=65536,wsize=65536,timeo=30 0 0
 
-# root /root 9p rw,noatime,nodiratime,relatime,sync,dirsync,cache=fscache,trans=virtio,noauto,x-systemd.automount,version=9p2000.L,msize=262144,access=client,posixacl 0 0
-# home /home 9p rw,noatime,nodiratime,relatime,sync,dirsync,cache=fscache,trans=virtio,noauto,x-systemd.automount,version=9p2000.L,msize=262144,access=client,posixacl 0 0
 """ | teeshush "$targetdir/etc/fstab"
 
   echo "mark: /etc/network/interfaces"
@@ -271,9 +274,6 @@ virtio_pci
 virtio_ring
 virtio
 ext4
-9p
-9pnet
-9pnet_virtio
 """ | teeshush "$targetdir/etc/modules"
 
   echo "mark: /etc/default/grub"
@@ -282,7 +282,7 @@ ext4
 GRUB_HIDDEN_TIMEOUT_QUIET=true
 GRUB_TIMEOUT=2
 GRUB_DISTRIBUTOR=$(lsb_release -i -s 2>/dev/null || echo Debian)
-GRUB_CMDLINE_LINUX_DEFAULT="\"root=/dev/vda2 console=tty0 console=ttyS0,38400n8 apparmor=0 net.ifnames=0 elevator=noop\""
+GRUB_CMDLINE_LINUX_DEFAULT="\"root=/dev/vda2 console=tty0 console=hvc0 apparmor=0 net.ifnames=0 elevator=noop nomodeset\""
 GRUB_CMDLINE_LINUX=\"\"
 GRUB_TERMINAL=serial
 GRUB_SERIAL_COMMAND=\"serial --speed=115200 --unit=0 --word=8 --parity=no --stop=1\"
@@ -292,7 +292,7 @@ GRUB_DISABLE_OS_PROBER=\"true\"""" | teeshush "$targetdir/etc/default/grub"
 
   echo "mark: /etc/apt/sources.list"
 
-  [ $distro_devel -eq 1 ] && distro="focal"
+  [ $distro_devel -eq 1 ] && distro="groovy"
 
   echo """deb $repository $distro main restricted universe multiverse
 deb $repository $distro-updates main restricted universe multiverse
@@ -306,6 +306,7 @@ deb $repository $distro-proposed main restricted universe multiverse""" | teeshu
   runinjail "$prefix apt-get dist-upgrade -y"
   runinjail "$prefix apt-get install -y cloud-init"
   runinjail "$prefix apt-get install -y grub2 linux-image-generic linux-headers-generic"
+  runinjail "$prefix apt-get install -y nfs-common"
   runinjail "$prefix apt-get --purge autoremove -y"
   runinjail "$prefix apt-get autoclean"
 
@@ -381,5 +382,7 @@ clean_mount=1
 clean_vfat=1
 clean_nbd=1
 clean_qcow2=0
+
+checkcond virsh start $hostname
 
 exit 0
