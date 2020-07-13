@@ -9,7 +9,6 @@ kvmprereqs() {
   checkreq fdisk fdisk
   checkreq gdisk gdisk
   checkreq uuidgen uuid-runtime
-  checkreq qemu-system-x86_64 qemu-system-x86
   checkreq qemu-img qemu-utils
 
   checkcond virsh net-info default
@@ -27,7 +26,6 @@ kvmprereqsinst() {
   checkreqinst fdisk fdisk
   checkreqinst gdisk gdisk
   checkreqinst uuidgen uuid-runtime
-  checkreqinst qemu-system-x86_64 qemu-system-x86
   checkreqinst qemu-img qemu-utils
 
   # TODO: define default pool & network if not defined

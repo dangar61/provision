@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 # bootstraps a qcow2 image using debootstrap
 # feeds user-data cloud-init yaml file into it
@@ -46,6 +46,9 @@ repository=""
 distro=""
 libvirt=""
 components=""
+arm64=0
+vmlinuz=""
+initrd=""
 
 usage $@
 
@@ -61,12 +64,11 @@ usage $@
 [[ "$distro" == "" ]] && distro=$(ubuntu-distro-info --devel)
 [[ "$launchpad_id" == "" ]] && launchpad_id="rafaeldtinoco"
 [[ "$username" == "" ]] && username="ubuntu"
-[[ "$repository" == "" ]] && repository="http://br.archive.ubuntu.com/ubuntu"
+[[ "$repository" == "" ]] && repository="http://ports.ubuntu.com/ubuntu-ports"
 
 [[ "$proxy" != "" ]] && export HTTP_PROXY="$proxy" ; export http_proxy=${proxy}
 [[ "$proxy" != "" ]] && export HTTPS_PROXY="$proxy" ; export https_proxy=${proxy}
 [[ "$proxy" != "" ]] && export FTP_PROXY="$proxy" ; export ftp_proxy=${proxy}
-
 
 distro_devel=0
 if [[ "$distro" == "groovy" ]];
@@ -81,6 +83,12 @@ network=$(virsh net-info default | grep Bridge | awk '{print $2}')
 pooldir=$(virsh pool-dumpxml default | grep path | sed -E 's:</?path>::g; s:\s+::g')
 qemubin=$(which qemu-system-x86_64)
 newmac=$(printf '52:54:00:%02X:%02X:%02X\n' $((RANDOM % 256)) $((RANDOM % 256)) $((RANDOM % 256)))
+
+if [[ "$(uname -p)" == "aarch64" ]]
+then
+    qemubin=$(which /usr/bin/qemu-system-aarch64)
+    arm64=1
+fi
 
 do_tempdirs() {
 
@@ -267,11 +275,10 @@ do_debootstrap() {
 
   echo "mark: /etc/fstab"
 
-  echo """\
-LABEL=MYROOT / ext4 noatime,nodiratime,relatime,discard,errors=remount-ro 0 1
+  echo """LABEL=MYROOT / ext4 noatime,nodiratime,relatime,discard,errors=remount-ro 0 1
 # 10.250.99.1:/home /home nfs nfsvers=3,rw,sync,rdirplus,nolock,hard,noac,rsize=65536,wsize=65536,timeo=30 0 0
-# 10.250.99.1:/root /root nfs nfsvers=3,rw,sync,rdirplus,nolock,hard,noac,rsize=65536,wsize=65536,timeo=30 0 0""" | \
-    teeshush "$targetdir/etc/fstab"
+# 10.250.99.1:/root /root nfs nfsvers=3,rw,sync,rdirplus,nolock,hard,noac,rsize=65536,wsize=65536,timeo=30 0 0\
+""" | teeshush "$targetdir/etc/fstab"
 
   echo "mark: /etc/network/interfaces"
 
@@ -295,7 +302,10 @@ ext4
 
   echo "mark: /etc/default/grub"
 
-  echo """GRUB_DEFAULT=0
+  if [[ ${arm64} -ne 1 ]]
+  then
+
+      echo """GRUB_DEFAULT=0
 GRUB_HIDDEN_TIMEOUT_QUIET=true
 GRUB_TIMEOUT=2
 GRUB_DISTRIBUTOR=\"Mine\"
@@ -305,27 +315,27 @@ GRUB_TERMINAL=serial
 GRUB_SERIAL_COMMAND=\"serial --speed=115200 --unit=0 --word=8 --parity=no --stop=1\"
 GRUB_DISABLE_LINUX_UUID=\"true\"
 GRUB_DISABLE_RECOVERY=\"true\"
-GRUB_DISABLE_OS_PROBER=\"true\"""" | teeshush "$targetdir/etc/default/grub"
+GRUB_DISABLE_OS_PROBER=\"true\"\
+""" | teeshush "$targetdir/etc/default/grub"
+
+  fi
 
   echo "mark: /etc/apt/sources.list"
 
   [[ ${distro_devel} -eq 1 ]] && distro="groovy"
 
-if [[ "${distro}" == "sid" ]]
-then
-
-  echo "deb ${repository} ${distro} main non-free contrib" | \
-    teeshush "${targetdir}/etc/sources.list"
-
-else
-
-  echo """
+  if [[ "${distro}" == "sid" ]]
+  then
+    echo "deb ${repository} ${distro} main non-free contrib" | \
+        teeshush "${targetdir}/etc/sources.list"
+  else
+    echo """
 deb $repository $distro ${components//,/ }
 deb $repository $distro-updates ${components//,/ }
-deb $repository $distro-proposed ${components//,/ }""" | \
-    teeshush "$targetdir/etc/apt/sources.list"
+deb $repository $distro-proposed ${components//,/ }\
+""" | teeshush "$targetdir/etc/apt/sources.list"
 
-fi
+  fi
 
   echo "mark: update and upgrade"
 
@@ -333,7 +343,6 @@ fi
 
   runinjail "$prefix apt-get update"
   runinjail "$prefix apt-get dist-upgrade -y"
-
   runinjail "$prefix apt-get install -y debconf"
 
   if [[ "${distro}" == "sid" ]]
@@ -345,26 +354,37 @@ fi
     runinjail "$prefix apt-get install -y linux-headers-generic"
   fi
 
-  runinjail "$prefix apt-get install -y grub2"
+  if [[ ${arm64} -ne 1 ]]
+  then
+    runinjail "$prefix apt-get install -y grub2"
+  fi
+
   runinjail "$prefix apt-get install -y cloud-init"
   runinjail "$prefix apt-get install -y nfs-common"
   runinjail "$prefix apt-get --purge autoremove -y"
   runinjail "$prefix apt-get autoclean"
 
+  runinjail "echo debconf debconf/priority select low | debconf-set-selections"
+  runinjail "$prefix dpkg-reconfigure debconf"
+
   echo "mark: grub setup"
 
-  runinjail "echo debconf debconf/priority select low | debconf-set-selections"
-  runinjail "echo grub2 grub2/linux_cmdline_default string \"root=/dev/vda2 console=tty0 console=ttyS0,38400n8 apparmor=0 net.ifnames=0 elevator=noop pti=off kpti=off nopcid noibrs noibpb spectre_v2=off nospec_store_bypass_disable l1tf=off\" | debconf-set-selections"
-  runinjail "echo grub2 grub2/linux_cmdline string | debconf-set-selections"
-  runinjail "echo grub-pc grub-pc/install_devices string /dev/vda | debconf-set-selections"
+  if [[ ${arm64} -ne 1 ]]
+  then
+    runinjail "echo grub2 grub2/linux_cmdline_default string \"root=/dev/vda2 console=tty0 console=ttyS0,38400n8 apparmor=0 net.ifnames=0 elevator=noop pti=off kpti=off nopcid noibrs noibpb spectre_v2=off nospec_store_bypass_disable l1tf=off\" | debconf-set-selections"
+    runinjail "echo grub2 grub2/linux_cmdline string | debconf-set-selections"
+    runinjail "echo grub-pc grub-pc/install_devices string /dev/vda | debconf-set-selections"
+    runinjail "$prefix dpkg-reconfigure grub2"
+    runinjail "$prefix dpkg-reconfigure grub-pc"
+    runinjail "grub-install --force ${nbdavail}"
+    runinjail "update-grub"
+  fi
 
-  runinjail "$prefix dpkg-reconfigure debconf"
-  runinjail "$prefix dpkg-reconfigure grub2"
-  runinjail "$prefix dpkg-reconfigure grub-pc"
+  vmlinuz=${pooldir}/${hostname}.vmlinuz
+  initrd=${pooldir}/${hostname}.initrd
 
-  runinjail "grub-install --force ${nbdavail}"
-  runinjail "update-grub"
-
+  cp ${targetdir}/boot/vmlinuz ${vmlinuz}
+  cp ${targetdir}/boot/initrd.img ${initrd}
 }
 
 [[ ${noinstall} -eq 0 ]] && do_debootstrap
@@ -379,6 +399,8 @@ export hostname=${hostname}
 export ramgb=${ramgb}
 export vcpus=${vcpus}
 export qemubin=${qemubin}
+export vmlinuz=${vmlinuz}
+export initrd=${initrd}
 
 # conditional vars (to fail on purpose if something wrong)
 [[ "$cdromvol" != "" ]]  && export cdromvol=${cdromvol}
@@ -398,7 +420,7 @@ checkcond virsh define /tmp/vm$$.xml
 
 echo "mark: meta-data and user-data"
 
-if [[ ${noinstall} -eq 0 ]];
+if [[ ${noinstall} -eq 0 ]]
 then
   checkcond cp ${scriptdir}/cloud-init/${cloudinit}.yaml ${fattargetdir}/user-data
   checkcond echo "\"{instance-id: $uuid)}\"" | teeshush "$fattargetdir/meta-data"

@@ -1,0 +1,75 @@
+<domain type='kvm'>
+  <name>$hostname</name>
+  <uuid>$uuid</uuid>
+  <memory unit='GiB'>$ramgb</memory>
+  <currentMemory unit='GiB'>$ramgb</currentMemory>
+  <vcpu placement='static'>$vcpus</vcpu>
+  <resource>
+    <partition>/machine</partition>
+  </resource>
+  <!-- armhf needs external kernel & initrd files -->
+  <os>
+    <type arch='armv7l' machine='virt-2.12'>hvm</type>
+    <kernel>$vmlinuz</kernel>
+    <initrd>$initrd</initrd>
+    <cmdline>root=/dev/vda noresume console=ttyAMA0,38400n8 net.ifnames=0 apparmor=0</cmdline>
+    <boot dev='hd'/>
+  </os>
+  <features>
+    <gic version='3'/>
+  </features>
+  <cpu mode='host-passthrough' check='none'/>
+  <!-- clocks and timer -->
+  <clock offset='utc'/>
+  <!-- actions -->
+  <on_poweroff>destroy</on_poweroff>
+  <on_reboot>restart</on_reboot>
+  <on_crash>restart</on_crash>
+  <!-- devices -->
+  <devices>
+    <emulator>$qemubin</emulator>
+    <!-- PCIe root controller -->
+    <controller type='pci' index='0' model='pcie-root'/>
+    <!-- PCI root controller ports -->
+    <controller type='pci' index='1' model='pcie-root-port'>
+      <model name='pcie-root-port'/>
+    </controller>
+    <controller type='pci' index='2' model='pcie-root-port'>
+      <model name='pcie-root-port'/>
+    </controller>
+    <controller type='pci' index='3' model='pcie-root-port'>
+      <model name='pcie-root-port'/>
+    </controller>
+    <controller type='pci' index='4' model='pcie-root-port'>
+      <model name='pcie-root-port'/>
+    </controller>
+    <!-- Virtio controllers -->
+    <controller type='virtio-serial' index='0'>
+    </controller>
+    <!-- memory ballooning -->
+    <memballoon model='virtio'/>
+    <!-- virtio disk -->
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='qcow2'/>
+      <source file='$qcow2vol'/>
+      <target dev='vda' bus='virtio'/>
+    </disk>
+    <!-- default network -->
+    <interface type='network'>
+      <source network='default'/>
+      <model type='virtio'/>
+    </interface>
+    <!-- serial -->
+    <serial type='pty'>
+      <target type='system-serial' port='0'>
+        <model name='pl011'/>
+      </target>
+    </serial>
+    <console type='pty'>
+      <target type='serial' port='0'/>
+    </console>
+    <console type='pty'>
+      <target type='virtio' port='1'/>
+    </console>
+  </devices>
+</domain>
