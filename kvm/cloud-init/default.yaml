@@ -20,20 +20,16 @@ http_proxy: CHANGE_HTTP_PROXY
 https_proxy: CHANGE_HTTPS_PROXY
 ftp_proxy: CHANGE_FTP_PROXY
 runcmd:
-  - snap install --classic --edge git-ubuntu
+  - pkill snapd
+  - systemctl disable --now snapd.service
+  - systemctl disable --now snapd.socket
   - systemctl stop unattended-upgrades
   - systemctl stop systemd-remount-fs
   - system reset-failed
   - passwd -d root
   - passwd -d CHANGE_USERNAME
   - echo "debconf debconf/priority select low" | sudo debconf-set-selections
-  - DEBIAN_FRONTEND=noninteractive dpkg-reconfigure debconf
-  - DEBIAN_FRONTEND=noninteractive apt-get update -y || true
-  - DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -y || true
-  - DEBIAN_FRONTEND=noninteractive apt-get autoremove -y || true
-  - DEBIAN_FRONTEND=noninteractive apt-get autoclean -y || true
-  - DEBIAN_FRONTEND=noninteractive apt-get install -y openjdk-8-jdk || true
-  - systemctl disable systemd-remount-fs
+  - systemctl disable --now systemd-remount-fs
   - systemctl disable --now unattended-upgrades
   - systemctl disable --now apt-daily-upgrade.timer
   - systemctl disable --now apt-daily.timer
@@ -60,12 +56,14 @@ runcmd:
   - systemctl disable --now e2scrub_all.timer
   - systemctl disable --now e2scrub_reap.service
   - systemctl disable --now dbus-org.freedesktop.thermald.service
+  - DEBIAN_FRONTEND=noninteractive dpkg-reconfigure debconf
+  - DEBIAN_FRONTEND=noninteractive apt-get update -y || true
+  - DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -y || true
+  - DEBIAN_FRONTEND=noninteractive apt-get autoremove -y || true
+  - DEBIAN_FRONTEND=noninteractive apt-get autoclean -y || true
   - systemctl enable --now serial-getty@hvc0.service
   - systemctl enable --now serial-getty@hvc1.service
   - systemctl enable --now serial-getty@hvc2.service
-  - systemctl enable --now serial-getty@hvc3.service
-  - systemctl enable --now serial-getty@hvc4.service
-  - systemctl enable --now serial-getty@hvc5.service
   - DEBIAN_FRONTEND=noninteractive apt-get install -y haveged || true
   - rm -rf /root/.bashrc /root/.gnupg /root/.profile /root/.ssh/
   - cp -rfp /home/CHANGE_USERNAME/.ssh /root/.ssh
@@ -81,9 +79,6 @@ runcmd:
   - mkdir -p /etc/systemd/system/serial-getty@hvc0.service.d
   - mkdir -p /etc/systemd/system/serial-getty@hvc1.service.d
   - mkdir -p /etc/systemd/system/serial-getty@hvc2.service.d
-  - mkdir -p /etc/systemd/system/serial-getty@hvc3.service.d
-  - mkdir -p /etc/systemd/system/serial-getty@hvc4.service.d
-  - mkdir -p /etc/systemd/system/serial-getty@hvc5.service.d
 packages:
   - man
   - manpages
@@ -121,19 +116,7 @@ packages:
   - ltrace
   - lsof
   - xterm
-  - vim-gtk
   - vim-nox
-  - gtk2-engines
-  - gtk2-engines-murrine
-  - gtk2-engines-pixbuf
-  - gtk3-engines-breeze
-  - gtk3-engines-unico
-  - dmz-cursor-theme
-  - gnome-icon-theme
-  - gnome-themes-standard
-  - gnome-themes-ubuntu
-  - gtk-3-examples
-  - keychain
 power_state:
   delay: 'now'
   mode: reboot
@@ -141,6 +124,10 @@ power_state:
   condition: True
 final_message: "The system is finally up! Enjoy!"
 write_files:
+  - path: /etc/network/interfaces
+    content: |
+      auto lo
+      iface lo inet loopback
   - path: /etc/ssh/sshd_config
     content: |
       Port 22
@@ -196,6 +183,7 @@ write_files:
         CHANGE_USERNAME ALL=(ALL) NOPASSWD: ALL
   - path: /etc/default/grub
     content: |
+        # x86 grub file, other arches will ignore it
         GRUB_DEFAULT=0
         GRUB_HIDDEN_TIMEOUT_QUIET=false
         GRUB_TIMEOUT=2
@@ -253,58 +241,6 @@ write_files:
         [Install]
         WantedBy=getty.target
   - path: /etc/systemd/system/serial-getty@hvc2.service.d/override.conf
-    content: |
-        [Service]
-        User=CHANGE_USERNAME
-        Environment=HOME=/home/CHANGE_USERNAME
-        WorkingDirectory=/home/CHANGE_USERNAME
-        ExecStart=
-        ExecStart=-/bin/bash
-        StandardInput=tty
-        StandardOutput=tty
-        Restart=always
-        [Install]
-        WantedBy=getty.target
-  - path: /etc/systemd/system/serial-getty@hvc3.service.d/override.conf
-    content: |
-        [Service]
-        User=CHANGE_USERNAME
-        Environment=HOME=/home/CHANGE_USERNAME
-        WorkingDirectory=/home/CHANGE_USERNAME
-        ExecStart=
-        ExecStart=-/bin/bash
-        StandardInput=tty
-        StandardOutput=tty
-        Restart=always
-        [Install]
-        WantedBy=getty.target
-  - path: /etc/systemd/system/serial-getty@hvc4.service.d/override.conf
-    content: |
-        [Service]
-        User=CHANGE_USERNAME
-        Environment=HOME=/home/CHANGE_USERNAME
-        WorkingDirectory=/home/CHANGE_USERNAME
-        ExecStart=
-        ExecStart=-/bin/bash
-        StandardInput=tty
-        StandardOutput=tty
-        Restart=always
-        [Install]
-        WantedBy=getty.target
-  - path: /etc/systemd/system/serial-getty@hvc5.service.d/override.conf
-    content: |
-        [Service]
-        User=CHANGE_USERNAME
-        Environment=HOME=/home/CHANGE_USERNAME
-        WorkingDirectory=/home/CHANGE_USERNAME
-        ExecStart=
-        ExecStart=-/bin/bash
-        StandardInput=tty
-        StandardOutput=tty
-        Restart=always
-        [Install]
-        WantedBy=getty.target
-  - path: /etc/systemd/system/serial-getty@hvc6.service.d/override.conf
     content: |
         [Service]
         User=CHANGE_USERNAME

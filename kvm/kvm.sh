@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 
 # bootstraps a qcow2 image using debootstrap
 # feeds user-data cloud-init yaml file into it
@@ -31,6 +31,7 @@ clean_vfat=0
 
 # arguments
 
+architecture=""
 vcpus=""
 ramgb=""
 hostname=""
@@ -46,7 +47,6 @@ repository=""
 distro=""
 libvirt=""
 components=""
-arm64=0
 vmlinuz=""
 initrd=""
 
@@ -60,11 +60,11 @@ usage $@
 
 # defaults
 
+[[ "$architecture" == "" ]] && architecture=$(dpkg-architecture -qDEB_HOST_ARCH)
 [[ "$cloudinit" == "" ]] && cloudinit="default"
 [[ "$distro" == "" ]] && distro=$(ubuntu-distro-info --devel)
 [[ "$launchpad_id" == "" ]] && launchpad_id="rafaeldtinoco"
 [[ "$username" == "" ]] && username="ubuntu"
-[[ "$repository" == "" ]] && repository="http://ports.ubuntu.com/ubuntu-ports"
 
 [[ "$proxy" != "" ]] && export HTTP_PROXY="$proxy" ; export http_proxy=${proxy}
 [[ "$proxy" != "" ]] && export HTTPS_PROXY="$proxy" ; export https_proxy=${proxy}
@@ -77,6 +77,23 @@ then
   distro="focal"
 fi
 
+if [[
+    "${architecture}" != "arm64" && "${architecture}" != "amd64" &&
+    "${architecture}" != "armhf" && "${architecture}" != "i386"
+    ]]
+then
+    exiterr "wrong architecture: $architecture"
+fi
+
+if [[ "$arch" != "amd64" && "$arch" != "i386" ]]
+then
+    [[ "$repository" == "" ]] && {
+        repository="http://ports.ubuntu.com/ubuntu-ports"
+    }
+fi
+
+[[ "$repository" == "" ]] && repository="http://br.archive.ubuntu.com/ubuntu"
+
 # environmetal
 
 network=$(virsh net-info default | grep Bridge | awk '{print $2}')
@@ -84,11 +101,20 @@ pooldir=$(virsh pool-dumpxml default | grep path | sed -E 's:</?path>::g; s:\s+:
 qemubin=$(which qemu-system-x86_64)
 newmac=$(printf '52:54:00:%02X:%02X:%02X\n' $((RANDOM % 256)) $((RANDOM % 256)) $((RANDOM % 256)))
 
-if [[ "$(uname -p)" == "aarch64" ]]
-then
-    qemubin=$(which /usr/bin/qemu-system-aarch64)
-    arm64=1
-fi
+case ${architecture} in
+    arm64)
+        qemubin=$(which qemu-system-aarch64)
+        ;;
+    armhf)
+        qemubin=$(which qemu-system-aarch64)
+        ;;
+    amd64)
+        qemubin=$(which qemu-system-x86_64)
+        ;;
+    i386)
+        qemubin=$(which qemu-system-x86_64)
+        ;;
+esac
 
 do_tempdirs() {
 
@@ -245,6 +271,7 @@ do_debootstrap() {
   checkcond debootstrap \
     --components=${components} \
     --include="${packages}" \
+    --arch="${architecture}" \
     ${distro} \
     ${targetdir} \
     "$repository"
@@ -302,7 +329,7 @@ ext4
 
   echo "mark: /etc/default/grub"
 
-  if [[ ${arm64} -ne 1 ]]
+  if [[ "${architecture}" == "amd64" || "${architecture}" == "i386" ]]
   then
 
       echo """GRUB_DEFAULT=0
@@ -354,7 +381,7 @@ deb $repository $distro-proposed ${components//,/ }\
     runinjail "$prefix apt-get install -y linux-headers-generic"
   fi
 
-  if [[ ${arm64} -ne 1 ]]
+  if [[ "${architecture}" == "amd64" || "${architecture}" == "i386" ]]
   then
     runinjail "$prefix apt-get install -y grub2"
   fi
@@ -369,7 +396,7 @@ deb $repository $distro-proposed ${components//,/ }\
 
   echo "mark: grub setup"
 
-  if [[ ${arm64} -ne 1 ]]
+  if [[ "${architecture}" == "amd64" || "${architecture}" == "i386" ]]
   then
     runinjail "echo grub2 grub2/linux_cmdline_default string \"root=/dev/vda2 console=tty0 console=ttyS0,38400n8 apparmor=0 net.ifnames=0 elevator=noop pti=off kpti=off nopcid noibrs noibpb spectre_v2=off nospec_store_bypass_disable l1tf=off\" | debconf-set-selections"
     runinjail "echo grub2 grub2/linux_cmdline string | debconf-set-selections"

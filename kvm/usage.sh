@@ -4,8 +4,12 @@
 
 getoptkvm() {
 
-  while getopts ":c:m:n:t:d:p:l:u:r:i:o:kqhw" opt; do
+  while getopts ":a:c:m:n:t:d:p:l:u:r:i:o:kqhw" opt; do
     case ${opt} in
+    a)
+      architecture=$OPTARG
+      echo "option: arch=$architecture"
+      ;;
     c)
       vcpus=$OPTARG
       _vcpus_max=$(($vcpus-1))
@@ -74,6 +78,7 @@ getoptkvm() {
       printf "syntax: $0 [options]\n"
       printf "\n"
       printf "options:\n"
+      printf "\t-a <architecture>\t- amd64, arm64, i386 or armhf\n"
       printf "\t-c <#.cpus>\t\t- number of cpus\n"
       printf "\t-m <mem.GB>\t\t- memory size\n"
       printf "\t-n <vm.name>\t\t- virtual machine name\n"
