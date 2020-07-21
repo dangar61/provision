@@ -15,18 +15,18 @@ ftp_proxy: CHANGE_FTP_PROXY
 runcmd:
   - passwd -d root
   - passwd -d CHANGE_USERNAME
-  - echo "debconf debconf/priority select low" | sudo debconf-set-selections
-  - DEBIAN_FRONTEND=noninteractive dpkg-reconfigure debconf
-  - DEBIAN_FRONTEND=noninteractive apt-get update -y || true
-  - DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -y || true
-  - DEBIAN_FRONTEND=noninteractive apt-get autoremove -y || true
-  - DEBIAN_FRONTEND=noninteractive apt-get autoclean -y || true
   - systemctl enable --now serial-getty@hvc0.service
   - systemctl enable --now serial-getty@hvc1.service
   - systemctl enable --now serial-getty@hvc2.service
   - systemctl enable --now serial-getty@hvc3.service
   - systemctl enable --now serial-getty@hvc4.service
   - systemctl enable --now serial-getty@hvc5.service
+  - echo "debconf debconf/priority select medium" | sudo debconf-set-selections
+  - DEBIAN_FRONTEND=noninteractive dpkg-reconfigure debconf
+  - DEBIAN_FRONTEND=noninteractive apt-get update -y || true
+  - DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -y || true
+  - DEBIAN_FRONTEND=noninteractive apt-get autoremove -y || true
+  - DEBIAN_FRONTEND=noninteractive apt-get autoclean -y || true
   - DEBIAN_FRONTEND=noninteractive apt-get install -y haveged || true
   - rm -rf /root/.bashrc /root/.gnupg /root/.profile /root/.ssh/
   - cp -rfp /home/CHANGE_USERNAME/.ssh /root/.ssh
@@ -49,6 +49,7 @@ packages:
   - man
   - manpages
   - hello
+  - locales
   - less
   - vim
   - jq
@@ -71,17 +72,17 @@ packages:
   - openssh-server
   - openssh-client
   - software-properties-common
-  - build-essential
-  - devscripts
-  - git-buildpackage
-  - ubuntu-dev-tools
   - gdb
   - strace
   - ltrace
   - lsof
   - xterm
   - vim-nox
-  - keychain
+  - sysstat
+  - build-essential
+  - devscripts
+  - git-buildpackage
+  - ubuntu-dev-tools
 power_state:
   delay: 'now'
   mode: reboot
@@ -89,6 +90,12 @@ power_state:
   condition: True
 final_message: "The system is finally up! Enjoy!"
 write_files:
+  - path: /etc/network/interfaces
+    content: |
+      auto lo
+      iface lo inet loopback
+      auto eth0
+      iface eth0 inet dhcp
   - path: /etc/ssh/sshd_config
     content: |
       Port 22
@@ -144,6 +151,7 @@ write_files:
         CHANGE_USERNAME ALL=(ALL) NOPASSWD: ALL
   - path: /etc/default/grub
     content: |
+        # x86 grub file, other arches will ignore it
         GRUB_DEFAULT=0
         GRUB_HIDDEN_TIMEOUT_QUIET=false
         GRUB_TIMEOUT=2
@@ -240,19 +248,6 @@ write_files:
         [Install]
         WantedBy=getty.target
   - path: /etc/systemd/system/serial-getty@hvc5.service.d/override.conf
-    content: |
-        [Service]
-        User=CHANGE_USERNAME
-        Environment=HOME=/home/CHANGE_USERNAME
-        WorkingDirectory=/home/CHANGE_USERNAME
-        ExecStart=
-        ExecStart=-/bin/bash
-        StandardInput=tty
-        StandardOutput=tty
-        Restart=always
-        [Install]
-        WantedBy=getty.target
-  - path: /etc/systemd/system/serial-getty@hvc6.service.d/override.conf
     content: |
         [Service]
         User=CHANGE_USERNAME
