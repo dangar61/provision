@@ -85,7 +85,7 @@ then
     exiterr "wrong architecture: $architecture"
 fi
 
-if [[ "$arch" != "amd64" && "$arch" != "i386" ]]
+if [[ "${architecture}" != "amd64" && "${architecture}" != "i386" ]]
 then
     [[ "$repository" == "" ]] && {
         repository="http://ports.ubuntu.com/ubuntu-ports"
