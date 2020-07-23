@@ -303,8 +303,8 @@ do_debootstrap() {
   echo "mark: /etc/fstab"
 
   echo """LABEL=MYROOT / ext4 noatime,nodiratime,relatime,discard,errors=remount-ro 0 1
-# 10.250.99.1:/home /home nfs nfsvers=3,rw,sync,rdirplus,nolock,hard,noac,rsize=65536,wsize=65536,timeo=30 0 0
-# 10.250.99.1:/root /root nfs nfsvers=3,rw,sync,rdirplus,nolock,hard,noac,rsize=65536,wsize=65536,timeo=30 0 0\
+10.250.99.1:/home /home nfs nfsvers=3,rw,sync,rdirplus,nolock,hard,noac,rsize=65536,wsize=65536,timeo=30 0 0
+10.250.99.1:/root /root nfs nfsvers=3,rw,sync,rdirplus,nolock,hard,noac,rsize=65536,wsize=65536,timeo=30 0 0\
 """ | teeshush "$targetdir/etc/fstab"
 
   echo "mark: /etc/network/interfaces"
@@ -336,7 +336,7 @@ ext4
 GRUB_HIDDEN_TIMEOUT_QUIET=true
 GRUB_TIMEOUT=2
 GRUB_DISTRIBUTOR=\"Mine\"
-GRUB_CMDLINE_LINUX_DEFAULT="\"root=/dev/vda2 console=tty0 console=hvc0 apparmor=0 net.ifnames=0 elevator=noop nomodeset\""
+GRUB_CMDLINE_LINUX_DEFAULT="\"root=/dev/vda2 console=tty0 console=hvc0 apparmor=0 net.ifnames=0 elevator=noop nomodeset pti=off kpti=off nopcid noibrs noibpb spectre_v2=off nospec_store_bypass_disable l1tf=off\"
 GRUB_CMDLINE_LINUX=\"\"
 GRUB_TERMINAL=serial
 GRUB_SERIAL_COMMAND=\"serial --speed=115200 --unit=0 --word=8 --parity=no --stop=1\"
@@ -405,13 +405,13 @@ deb $repository $distro-proposed ${components//,/ }\
     runinjail "$prefix dpkg-reconfigure grub-pc"
     runinjail "grub-install --force ${nbdavail}"
     runinjail "update-grub"
+
+    vmlinuz=${pooldir}/${hostname}.vmlinuz
+    initrd=${pooldir}/${hostname}.initrd
+
+    cp ${targetdir}/boot/vmlinuz ${vmlinuz}
+    cp ${targetdir}/boot/initrd.img ${initrd}
   fi
-
-  vmlinuz=${pooldir}/${hostname}.vmlinuz
-  initrd=${pooldir}/${hostname}.initrd
-
-  cp ${targetdir}/boot/vmlinuz ${vmlinuz}
-  cp ${targetdir}/boot/initrd.img ${initrd}
 }
 
 [[ ${noinstall} -eq 0 ]] && do_debootstrap
