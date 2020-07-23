@@ -29,22 +29,11 @@ config:
     ftp_proxy: http://192.168.100.250:3142/
     https_proxy: http://192.168.100.250:3142/
     runcmd:
-      - snap install --classic --edge git-ubuntu
-      - snap install --classic --edge ustriage
-      - systemctl stop unattended-upgrades
-      - systemctl stop systemd-remount-fs
-      - systemctl reset-failed
-      - passwd -d root
-      - passwd -d rafaeldtinoco
-      - echo "debconf debconf/priority select low" | sudo debconf-set-selections
-      - DEBIAN_FRONTEND=noninteractive dpkg-reconfigure debconf
-      - DEBIAN_FRONTEND=noninteractive apt-get update -y
-      - DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -y
-      - DEBIAN_FRONTEND=noninteractive apt-get autoremove -y
-      - DEBIAN_FRONTEND=noninteractive apt-get autoclean -y
-      - DEBIAN_FRONTEND=noninteractive apt-get install -y openjdk-8-jdk || true
-      - systemctl disable systemd-remount-fs
+      - pkill snapd
+      - systemctl disable --now snapd.service
+      - systemctl disable --now snapd.socket
       - systemctl disable --now unattended-upgrades
+      - systemctl disable --now systemd-remount-fs
       - systemctl disable --now apt-daily-upgrade.timer
       - systemctl disable --now apt-daily.timer
       - systemctl disable --now accounts-daemon.service
@@ -70,7 +59,10 @@ config:
       - systemctl disable --now e2scrub_all.timer
       - systemctl disable --now e2scrub_reap.service
       - systemctl disable --now dbus-org.freedesktop.thermald.service
-      - DEBIAN_FRONTEND=noninteractive apt-get install -y haveged || true
+      - system reset-failed
+      - passwd -d root
+      - passwd -d CHANGE_USERNAME
+      - echo "debconf debconf/priority select medium" | sudo debconf-set-selections
     packages:
       - man
       - manpages
@@ -98,29 +90,18 @@ config:
       - openssh-server
       - openssh-client
       - software-properties-common
-      - build-essential
-      - devscripts
-      - git-buildpackage
-      - ubuntu-dev-tools
-      - linux-headers-generic
       - gdb
       - strace
       - ltrace
       - lsof
       - xterm
-      - vim-gtk
       - vim-nox
-      - gtk2-engines
-      - gtk2-engines-murrine
-      - gtk2-engines-pixbuf
-      - gtk3-engines-breeze
-      - gtk3-engines-unico
-      - dmz-cursor-theme
-      - gnome-icon-theme
-      - gnome-themes-standard
-      - gnome-themes-ubuntu
-      - gtk-3-examples
-      - keychain
+      - sysstat
+      - build-essential
+      - devscripts
+      - git-buildpackage
+      - ubuntu-dev-tools
+      - linux-headers-generic
     power_state:
       delay: 'now'
       mode: reboot

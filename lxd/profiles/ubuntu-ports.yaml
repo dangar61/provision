@@ -4,7 +4,7 @@ config:
     lxc.apparmor.profile = unconfined
     lxc.cgroup.devices.allow = a
     lxc.cap.drop =
-    lxc.mount.auto = cgroup:rw proc:rw sys:rw
+    lxc.mount.auto = cgroup:rw proc:rw sys:ro
   security.nesting: "true"
   security.privileged: "true"
   user.user-data: |
@@ -29,22 +29,11 @@ config:
     ftp_proxy: http://192.168.100.250:3142/
     https_proxy: http://192.168.100.250:3142/
     runcmd:
-      - snap install --classic --edge git-ubuntu
-      - snap install --classic --edge ustriage
-      - systemctl stop unattended-upgrades
-      - systemctl stop systemd-remount-fs
-      - systemctl reset-failed
-      - passwd -d root
-      - passwd -d rafaeldtinoco
-      - echo "debconf debconf/priority select low" | sudo debconf-set-selections
-      - DEBIAN_FRONTEND=noninteractive dpkg-reconfigure debconf
-      - DEBIAN_FRONTEND=noninteractive apt-get update -y
-      - DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -y
-      - DEBIAN_FRONTEND=noninteractive apt-get autoremove -y
-      - DEBIAN_FRONTEND=noninteractive apt-get autoclean -y
-      - DEBIAN_FRONTEND=noninteractive apt-get install -y openjdk-8-jdk || true
-      - systemctl disable systemd-remount-fs
+      - pkill snapd
+      - systemctl disable --now snapd.service
+      - systemctl disable --now snapd.socket
       - systemctl disable --now unattended-upgrades
+      - systemctl disable --now systemd-remount-fs
       - systemctl disable --now apt-daily-upgrade.timer
       - systemctl disable --now apt-daily.timer
       - systemctl disable --now accounts-daemon.service
@@ -70,7 +59,10 @@ config:
       - systemctl disable --now e2scrub_all.timer
       - systemctl disable --now e2scrub_reap.service
       - systemctl disable --now dbus-org.freedesktop.thermald.service
-      - DEBIAN_FRONTEND=noninteractive apt-get install -y haveged || true
+      - system reset-failed
+      - passwd -d root
+      - passwd -d CHANGE_USERNAME
+      - echo "debconf debconf/priority select medium" | sudo debconf-set-selections
     packages:
       - man
       - manpages
@@ -98,17 +90,18 @@ config:
       - openssh-server
       - openssh-client
       - software-properties-common
-      - build-essential
-      - devscripts
-      - git-buildpackage
-      - ubuntu-dev-tools
-      - linux-headers-generic
       - gdb
       - strace
       - ltrace
       - lsof
       - xterm
       - vim-nox
+      - sysstat
+      - build-essential
+      - devscripts
+      - git-buildpackage
+      - ubuntu-dev-tools
+      - linux-headers-generic
     power_state:
       delay: 'now'
       mode: reboot
@@ -173,7 +166,7 @@ config:
       preserve_sources_list: false
       primary:
         - arches: [default]
-          uri: http://ports.ubuntu.com/ubuntu-ports
+          uri: http://ports.ubuntu.com/ubuntu-ports/
       sources_list: |
         deb $MIRROR $RELEASE main restricted universe multiverse
         deb $MIRROR $RELEASE-updates main restricted universe multiverse
@@ -205,6 +198,22 @@ devices:
     nictype: bridged
     parent: lxdbr0
     type: nic
+  iconsdir:
+    path: /usr/share/icons
+    source: /usr/share/icons
+    type: disk
+  themesdir:
+    path: /usr/share/themes
+    source: /usr/share/themes
+    type: disk
+  fontsdir:
+    path: /usr/share/fonts
+    source: /usr/share/fonts
+    type: disk
+  etcfonts:
+    path: /etc/fonts/
+    source: /etc/fonts/
+    type: disk
   optdir:
     path: /opt
     source: /opt

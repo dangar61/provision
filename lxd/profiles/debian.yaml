@@ -65,13 +65,17 @@ config:
       - openssh-server
       - openssh-client
       - software-properties-common
-      - build-essential
-      - devscripts
-      - git-buildpackage
       - gdb
       - strace
       - ltrace
       - lsof
+      - xterm
+      - vim-nox
+      - sysstat
+      - build-essential
+      - devscripts
+      - git-buildpackage
+      - ubuntu-dev-tools
     power_state:
       delay: 'now'
       mode: reboot
