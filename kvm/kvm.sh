@@ -336,7 +336,7 @@ ext4
 GRUB_HIDDEN_TIMEOUT_QUIET=true
 GRUB_TIMEOUT=2
 GRUB_DISTRIBUTOR=\"Mine\"
-GRUB_CMDLINE_LINUX_DEFAULT="\"root=/dev/vda2 console=tty0 console=hvc0 apparmor=0 net.ifnames=0 elevator=noop nomodeset pti=off kpti=off nopcid noibrs noibpb spectre_v2=off nospec_store_bypass_disable l1tf=off\"
+GRUB_CMDLINE_LINUX_DEFAULT="\"root=/dev/vda2 console=tty0 console=hvc0 apparmor=0 net.ifnames=0 elevator=noop nomodeset pti=off kpti=off nopcid noibrs noibpb spectre_v2=off nospec_store_bypass_disable l1tf=off\""
 GRUB_CMDLINE_LINUX=\"\"
 GRUB_TERMINAL=serial
 GRUB_SERIAL_COMMAND=\"serial --speed=115200 --unit=0 --word=8 --parity=no --stop=1\"
