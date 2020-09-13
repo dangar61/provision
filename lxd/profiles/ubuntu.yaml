@@ -24,14 +24,9 @@ config:
         name: eth0
         subnets:
           - type: dhcp
-    proxy: http://192.168.100.250:3142/
-    http_proxy: http://192.168.100.250:3142/
-    ftp_proxy: http://192.168.100.250:3142/
-    https_proxy: http://192.168.100.250:3142/
     runcmd:
       - pkill snapd
-      - systemctl disable --now snapd.service
-      - systemctl disable --now snapd.socket
+      - systemctl disable --now snapd
       - systemctl disable --now unattended-upgrades
       - systemctl disable --now systemd-remount-fs
       - systemctl disable --now apt-daily-upgrade.timer
@@ -63,6 +58,13 @@ config:
       - passwd -d root
       - passwd -d CHANGE_USERNAME
       - echo "debconf debconf/priority select medium" | sudo debconf-set-selections
+      - DEBIAN_FRONTEND=noninteractive dpkg-reconfigure debconf
+      - DEBIAN_FRONTEND=noninteractive apt-get update -y
+      - DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -y
+      - DEBIAN_FRONTEND=noninteractive apt-get autoremove -y
+      - DEBIAN_FRONTEND=noninteractive apt-get autoclean -y
+      - DEBIAN_FRONTEND=noninteractive apt-get install -y haveged || true
+      - DEBIAN_FRONTEND=noninteractive apt-get remove -y --purge snapd
     packages:
       - man
       - manpages
@@ -179,7 +181,6 @@ config:
         # deb-src $MIRROR $RELEASE-backports main restricted universe multiverse
         # deb-src $SECURITY $RELEASE-security universe multiverse
       conf: |
-        Acquire::http::Proxy "http://192.168.100.250:3142/";
         Dpkg::Options {
           "--force-confdef";
           "--force-confold";
@@ -194,9 +195,10 @@ config:
           keyid: C8CAB6595FDFF622
 description: default
 devices:
-  lxdbr0:
+  internal:
+    name: internal
     nictype: bridged
-    parent: lxdbr0
+    parent: internal
     type: nic
   iconsdir:
     path: /usr/share/icons

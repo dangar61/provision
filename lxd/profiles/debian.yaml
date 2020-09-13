@@ -24,10 +24,6 @@ config:
         name: eth0
         subnets:
           - type: dhcp
-    proxy: http://192.168.100.250:3142/
-    http_proxy: http://192.168.100.250:3142/
-    ftp_proxy: http://192.168.100.250:3142/
-    https_proxy: http://192.168.100.250:3142/
     runcmd:
       - passwd -d root
       - passwd -d rafaeldtinoco
@@ -145,13 +141,12 @@ config:
         deb http://deb.debian.org/debian/ sid main non-free contrib
         deb-src http://deb.debian.org/debian/ sid main non-free contrib
         deb http://debug.mirrors.debian.org/debian-debug/ sid-debug main
-      conf: |
-        Acquire::http::Proxy "http://192.168.100.250:3142/";
 description: debian
 devices:
-  lxdbr0:
+  internal:
+    name: internal
     nictype: bridged
-    parent: lxdbr0
+    parent: internal
     type: nic
   iconsdir:
     path: /usr/share/icons
@@ -168,6 +163,10 @@ devices:
   etcfonts:
     path: /etc/fonts/
     source: /etc/fonts/
+    type: disk
+  libmodules:
+    path: /lib/modules
+    source: /lib/modules
     type: disk
   optdir:
     path: /opt
