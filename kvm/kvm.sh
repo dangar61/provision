@@ -3,19 +3,22 @@
 # bootstraps a qcow2 image using debootstrap
 # feeds user-data cloud-init yaml file into it
 
-if [[ $UID -ne 0 ]];
+if [ $UID -ne 0 ];
 then
   sudo --preserve-env=http_proxy "$0" "$@" && exit 0 || exit 1
 fi
 
 # directories
 
-scriptdir=$(dirname $0)
+scriptdir="$(dirname $0)"
 
 # includes
 
+# shellcheck disable=SC1090
 . ${scriptdir}/functions.sh
+# shellcheck disable=SC1090
 . ${scriptdir}/prereqs.sh
+# shellcheck disable=SC1090
 . ${scriptdir}/usage.sh
 
 # prereqs
@@ -50,7 +53,7 @@ components=""
 vmlinuz=""
 initrd=""
 
-usage $@
+usage "$@"
 
 # defaults (mandatory)
 
@@ -101,6 +104,9 @@ pooldir=$(virsh pool-dumpxml default | grep path | sed -E 's:</?path>::g; s:\s+:
 qemubin=$(which qemu-system-x86_64)
 newmac=$(printf '52:54:00:%02X:%02X:%02X\n' $((RANDOM % 256)) $((RANDOM % 256)) $((RANDOM % 256)))
 
+export network
+export newmac
+
 case ${architecture} in
     arm64)
         qemubin=$(which qemu-system-aarch64)
@@ -120,12 +126,12 @@ do_tempdirs() {
 
   # temp dirs
 
-  cd /tmp
+  cd /tmp || exiterr "something wrong is not right"
 
   target=$(mktemp -d XXXXXX)   # temporary debootstrap dir
   fattarget=$(mktemp -d XXXXX) # temporary user-data mount dir
 
-  cd - >/dev/null 2>&1
+  cd - >/dev/null 2>&1 || exiterr "something wrong is not right"
 
   targetdir="/tmp/$target"
   checkdir ${targetdir}
@@ -185,7 +191,7 @@ cleanup() {
 
   if [[ ${clean_qcow2} -eq 1 ]];
   then
-    virsh vol-delete --pool default $(basename ${qcow2vol}) >/dev/null 2>&1
+    virsh vol-delete --pool default "$(basename ${qcow2vol})" >/dev/null 2>&1
   fi
 
   # rm -f /tmp/vm$$.xml
@@ -210,7 +216,7 @@ do_qcow2creation() {
 
   echo "mark: qcow2 image"
 
-  checkcond virsh vol-create-as default $(basename ${qcow2vol}) ${qcow2size} --format qcow2
+  checkcond virsh vol-create-as default "$(basename ${qcow2vol})" ${qcow2size} --format qcow2
   clean_qcow2=1
 
   sync ; sync ; sync
@@ -289,7 +295,7 @@ do_debootstrap() {
 
   echo "mark: adjusting accounts"
 
-  if [[ "distro" == "sid" ]]
+  if [[ "$distro" == "sid" ]]
   then
     runinjail "echo en_US UTF-8 > /etc/locale.gen"
     runinjail "locale-gen \"en_US UTF-8\""
@@ -302,13 +308,15 @@ do_debootstrap() {
 
   echo "mark: /etc/fstab"
 
+  # shellcheck disable=SC1078
   echo """LABEL=MYROOT / ext4 noatime,nodiratime,relatime,discard,errors=remount-ro 0 1
-10.250.99.1:/home /home nfs nfsvers=3,rw,sync,rdirplus,nolock,hard,noac,rsize=65536,wsize=65536,timeo=30 0 0
-10.250.99.1:/root /root nfs nfsvers=3,rw,sync,rdirplus,nolock,hard,noac,rsize=65536,wsize=65536,timeo=30 0 0\
+#10.250.97.1:/home /home nfs nfsvers=3,rw,sync,rdirplus,nolock,hard,noac,rsize=65536,wsize=65536,timeo=30 0 0
+#10.250.97.1:/root /root nfs nfsvers=3,rw,sync,rdirplus,nolock,hard,noac,rsize=65536,wsize=65536,timeo=30 0 0\
 """ | teeshush "$targetdir/etc/fstab"
 
   echo "mark: /etc/network/interfaces"
 
+  # shellcheck disable=SC1078
   echo """auto lo
 iface lo inet loopback
 
@@ -318,6 +326,7 @@ iface eth0 inet dhcp
 
   echo "mark: /etc/modules"
 
+  # shellcheck disable=SC1078
   echo """virtio_balloon
 virtio_blk
 virtio_net
@@ -406,11 +415,12 @@ deb $repository $distro-proposed ${components//,/ }\
     runinjail "grub-install --force ${nbdavail}"
     runinjail "update-grub"
 
+  else
     vmlinuz=${pooldir}/${hostname}.vmlinuz
     initrd=${pooldir}/${hostname}.initrd
-
     cp ${targetdir}/boot/vmlinuz ${vmlinuz}
     cp ${targetdir}/boot/initrd.img ${initrd}
+
   fi
 }
 
