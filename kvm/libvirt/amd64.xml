@@ -52,9 +52,12 @@
     <!-- watchdog device -->
     <watchdog model='i6300esb' action='inject-nmi'/>
     <!-- default network -->
-    <interface type='network'>
-      <source network='default'/>
-      <model type='virtio'/>
+    <!-- <interface type='network'> -->
+    <!--  <source network='default'/> -->
+    <!--  <model type='virtio'/> -->
+    <!-- </interface> -->
+    <interface type='bridge'>
+      <source bridge='internal'/>
     </interface>
     <!-- serial -->
     <serial type='pty'>
