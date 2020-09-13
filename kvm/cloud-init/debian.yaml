@@ -8,6 +8,13 @@ users:
     groups: [root,sudo,staff]
     shell: /bin/bash
 disable_root: false
+network:
+  version: 2
+  config:
+  - type: physical
+    name: eth0
+    subnets:
+      - type: dhcp
 proxy: CHANGE_PROXY
 http_proxy: CHANGE_HTTP_PROXY
 https_proxy: CHANGE_HTTPS_PROXY
@@ -83,6 +90,7 @@ packages:
   - devscripts
   - git-buildpackage
   - ubuntu-dev-tools
+  - apt-file
 power_state:
   delay: 'now'
   mode: reboot

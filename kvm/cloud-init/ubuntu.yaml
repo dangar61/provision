@@ -8,13 +8,6 @@ users:
     groups: [root,sudo,staff]
     shell: /bin/bash
 disable_root: false
-network:
-  version: 2
-  config:
-  - type: physical
-    name: eth0
-    subnets:
-      - type: dhcp
 proxy: CHANGE_PROXY
 http_proxy: CHANGE_HTTP_PROXY
 https_proxy: CHANGE_HTTPS_PROXY
@@ -122,6 +115,7 @@ packages:
   - git-buildpackage
   - ubuntu-dev-tools
   - linux-headers-generic
+  - apt-file
 power_state:
   delay: 'now'
   mode: reboot
@@ -133,6 +127,8 @@ write_files:
     content: |
       auto lo
       iface lo inet loopback
+      auto eth0
+      iface eth0 inet dhcp
   - path: /etc/ssh/sshd_config
     content: |
       Port 22
